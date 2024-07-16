@@ -21,7 +21,12 @@ type Todo = {
   archivedTs: Nullable<number>;
   completedTs: Nullable<number>;
   dueTs: Nullable<number>;
-  tags: string[];
+  tags: Tag["name"][];
+};
+
+type Tag = {
+  name: string;
+  todos: Id[];
 };
 
 const todosAdapter = createEntityAdapter({
@@ -34,16 +39,37 @@ const todosAdapter = createEntityAdapter({
   },
 });
 
+const tagsAdapter = createEntityAdapter({
+  selectId: (tag: Tag) => tag.name,
+  sortComparer: (a, b) => a.name.localeCompare(b.name),
+});
+
 const todos = createSlice({
   name: "todos",
-  initialState: todosAdapter.getInitialState(),
+  initialState: todosAdapter.getInitialState({
+    tags: tagsAdapter.getInitialState(),
+  }),
   reducers: {
     todoAdded: {
-      reducer(state, action: PayloadAction<Todo>) {
-        todosAdapter.addOne(state, action.payload);
+      reducer(state, action: PayloadAction<[Todo, Tag[]]>) {
+        const [todo, tags] = action.payload;
+        for (let tag of tags) {
+          let existing = tagsAdapter
+            .getSelectors()
+            .selectById(state.tags, tag.name);
+          if (existing) {
+            tagsAdapter.updateOne(state.tags, {
+              id: tag.name,
+              changes: { todos: [...existing.todos, todo.id] },
+            });
+          } else {
+            tagsAdapter.addOne(state.tags, tag);
+          }
+        }
+        todosAdapter.addOne(state, todo);
       },
       prepare(input: NewTodo) {
-        return { payload: createTodo(input) };
+        return { payload: createTodoAndTags(input) };
       },
     },
     todoCompleted: {
@@ -96,6 +122,73 @@ const todos = createSlice({
         return { payload: { id, ts: Date.now() } };
       },
     },
+    tagAddedToTodo: {
+      reducer(
+        state,
+        action: PayloadAction<{ ts: number; tag: string; id: Todo["id"] }>
+      ) {
+        let todo = todosAdapter
+          .getSelectors()
+          .selectById(state, action.payload.id);
+        if (todo && !todo.tags.includes(action.payload.tag)) {
+          let updatedTags = [...todo.tags, action.payload.tag];
+          todosAdapter.updateOne(state, {
+            id: action.payload.id,
+            changes: { tags: updatedTags, updatedTs: action.payload.ts },
+          });
+          let tag = tagsAdapter
+            .getSelectors()
+            .selectById(state.tags, action.payload.tag);
+          if (tag) {
+            tagsAdapter.updateOne(state.tags, {
+              id: action.payload.tag,
+              changes: { todos: [...tag.todos, action.payload.id] },
+            });
+          } else {
+            tagsAdapter.addOne(state.tags, {
+              name: action.payload.tag,
+              todos: [action.payload.id],
+            });
+          }
+        }
+      },
+      prepare(id: Id, tag: string) {
+        return { payload: { ts: Date.now(), tag, id } };
+      },
+    },
+    tagRemovedFromTodo: {
+      reducer(
+        state,
+        action: PayloadAction<{ ts: number; tag: string; id: Todo["id"] }>
+      ) {
+        let todo = todosAdapter
+          .getSelectors()
+          .selectById(state, action.payload.id);
+        if (todo && todo.tags.includes(action.payload.tag)) {
+          let updatedTags = todo.tags.filter(
+            (name) => name !== action.payload.tag
+          );
+          todosAdapter.updateOne(state, {
+            id: action.payload.id,
+            changes: { tags: updatedTags, updatedTs: action.payload.ts },
+          });
+          let tag = tagsAdapter
+            .getSelectors()
+            .selectById(state.tags, action.payload.tag);
+          if (tag) {
+            tagsAdapter.updateOne(state.tags, {
+              id: action.payload.tag,
+              changes: {
+                todos: tag.todos.filter((id) => id !== action.payload.id),
+              },
+            });
+          }
+        }
+      },
+      prepare(id: Id, tag: string) {
+        return { payload: { ts: Date.now(), tag, id } };
+      },
+    },
   },
   selectors: {
     selectTodoById: todosAdapter.getSelectors().selectById,
@@ -120,26 +213,63 @@ const todos = createSlice({
         .filter((todo) => !todo.dueTs)
         .toSorted((a, b) => b.updatedTs - a.updatedTs);
     },
+    selectTodosByTags: (state, tags: string[]): Todo[] => {
+      let counts = tags
+        .map(
+          (tag) =>
+            tagsAdapter.getSelectors().selectById(state.tags, tag)?.todos ?? []
+        )
+        .filter((todos) => todos.length > 0)
+        .reduce(
+          (acc, val) => {
+            val.forEach((id) => {
+              acc[id] ??= 0;
+              acc[id]++;
+            });
+            return acc;
+          },
+          {} as Record<Id, number>
+        );
+      return (Object.entries(counts) as [Id, number][])
+        .toSorted((a, b) => {
+          return b[1] - a[1];
+        })
+        .map(([id]) => todosAdapter.getSelectors().selectById(state, id));
+    },
   },
 });
 
-function createTodo(input: NewTodo): Todo {
+function createTodoAndTags(input: NewTodo): [Todo, Tag[]] {
   let id = crypto.randomUUID();
   let now = Date.now();
-  return {
-    id,
-    content: input.content,
-    notes: input.notes,
-    createdTs: now,
-    updatedTs: now,
-    archivedTs: null,
-    completedTs: null,
-    dueTs: input.dueTs?.valueOf() ?? null,
-    tags: input.tags,
-  };
+  return [
+    {
+      id,
+      content: input.content,
+      notes: input.notes,
+      createdTs: now,
+      updatedTs: now,
+      archivedTs: null,
+      completedTs: null,
+      dueTs: input.dueTs?.valueOf() ?? null,
+      tags: input.tags,
+    },
+    input.tags.map((name) => ({
+      name,
+      todos: [id],
+    })),
+  ];
 }
 
-export const { todoAdded, todoCompleted, todoArchived, todoUncompleted, todoUnarchived } = todos.actions;
+export const {
+  todoAdded,
+  todoCompleted,
+  todoArchived,
+  todoUncompleted,
+  todoUnarchived,
+  tagAddedToTodo,
+  tagRemovedFromTodo,
+} = todos.actions;
 
 export const {
   selectTodoById,
@@ -147,12 +277,13 @@ export const {
   selectActiveTodos,
   selectArchivedTodos,
   selectUnscheduledActiveTodos,
+  selectTodosByTags,
 } = todos.selectors;
 
 export default todos.reducer;
 
 if (import.meta.vitest) {
-  const { test, expect, beforeAll, describe } = import.meta.vitest;
+  const { test, expect, beforeAll } = import.meta.vitest;
   let initialState: { todos: ReturnType<typeof todos.reducer> };
 
   beforeAll(async () => {
@@ -228,65 +359,105 @@ if (import.meta.vitest) {
     await new Promise((r) => setTimeout(r, 1000));
   });
 
-  describe("selectors", () => {
-    test("should return all todos", () => {
-      expect(selectAllTodos(initialState)).toHaveLength(10);
-    });
+  test("should return all todos", () => {
+    expect(selectAllTodos(initialState)).toHaveLength(10);
+  });
 
-    test("unscheduled todos should be sorted by last update timestamp", () => {
-      let content = "New todo";
-      let todosState = todos.reducer(
-        initialState.todos,
-        todoAdded({ content, notes: null, dueTs: null, tags: [] })
-      );
-      let state = { todos: todosState };
-      let unscheduledTodos = selectUnscheduledActiveTodos(state);
-      expect(unscheduledTodos?.[0]?.content).toBe(content);
-    });
+  test("unscheduled todos should be sorted by last update timestamp", () => {
+    let content = "New todo";
+    let todosState = todos.reducer(
+      initialState.todos,
+      todoAdded({ content, notes: null, dueTs: null, tags: [] })
+    );
+    let state = { todos: todosState };
+    let unscheduledTodos = selectUnscheduledActiveTodos(state);
+    expect(unscheduledTodos?.[0]?.content).toBe(content);
+  });
 
-    test("completing a todo should mark it as completed", () => {
-      let id = selectAllTodos(initialState)[0].id;
-      let state = {
-        todos: todos.reducer(initialState.todos, todoCompleted(id)),
-      };
-      let todo = selectTodoById(state, id);
-      expect(todo?.completedTs).not.toBeNull();
-    });
+  test("completing a todo should mark it as completed", () => {
+    let id = selectAllTodos(initialState)[0].id;
+    let state = {
+      todos: todos.reducer(initialState.todos, todoCompleted(id)),
+    };
+    let todo = selectTodoById(state, id);
+    expect(todo?.completedTs).not.toBeNull();
+  });
 
-    test("uncompleting a todo should mark it as active", () => {
-      let id = selectAllTodos(initialState)[0].id;
-      let state = {
-        todos: todos.reducer(initialState.todos, todoUncompleted(id)),
-      };
-      let todo = selectTodoById(state, id);
-      expect(todo?.completedTs).toBeNull();
-    });
+  test("uncompleting a todo should mark it as active", () => {
+    let id = selectAllTodos(initialState)[0].id;
+    let state = {
+      todos: todos.reducer(initialState.todos, todoUncompleted(id)),
+    };
+    let todo = selectTodoById(state, id);
+    expect(todo?.completedTs).toBeNull();
+  });
 
-    test("archiving a todo should mark it as archived", () => {
-      let id = selectAllTodos(initialState)[0].id;
-      let state = {
-        todos: todos.reducer(initialState.todos, todoArchived(id)),
-      };
-      let todo = selectTodoById(state, id);
-      expect(todo?.archivedTs).not.toBeNull();
-    });
+  test("archiving a todo should mark it as archived", () => {
+    let id = selectAllTodos(initialState)[0].id;
+    let state = {
+      todos: todos.reducer(initialState.todos, todoArchived(id)),
+    };
+    let todo = selectTodoById(state, id);
+    expect(todo?.archivedTs).not.toBeNull();
+  });
 
-    test("unarchiving a todo should mark it as active", () => {
-      let id = selectAllTodos(initialState)[0].id;
-      let state = {
-        todos: todos.reducer(initialState.todos, todoUnarchived(id)),
-      };
-      let todo = selectTodoById(state, id);
-      expect(todo?.archivedTs).toBeNull();
-    });
+  test("unarchiving a todo should mark it as active", () => {
+    let id = selectAllTodos(initialState)[0].id;
+    let state = {
+      todos: todos.reducer(initialState.todos, todoUnarchived(id)),
+    };
+    let todo = selectTodoById(state, id);
+    expect(todo?.archivedTs).toBeNull();
+  });
 
-    test("should return all archived todos", () => {
-      let id = selectAllTodos(initialState)[0].id;
-      let state = {
-        todos: todos.reducer(initialState.todos, todoArchived(id)),
-      };
-      let archivedTodos = selectArchivedTodos(state);
-      expect(archivedTodos).toHaveLength(1);
-    });
+  test("should return all archived todos", () => {
+    let id = selectAllTodos(initialState)[0].id;
+    let state = {
+      todos: todos.reducer(initialState.todos, todoArchived(id)),
+    };
+    let archivedTodos = selectArchivedTodos(state);
+    expect(archivedTodos).toHaveLength(1);
+  });
+
+  test("should return todo by tags", () => {
+    let todos = selectTodosByTags(initialState, ["work"]);
+    expect(todos).toHaveLength(3);
+  });
+
+  test("should return todo by multiple tags sorted by count", () => {
+    let todos = selectTodosByTags(initialState, ["family", "personal", "tagThatDoesNotExist"]);
+    let expectedContent = "Call mom";
+    expect(todos).toHaveLength(6);
+    expect(todos[0]?.content).toBe(expectedContent);
+  });
+
+  test("should add a new tag to a todo", () => {
+    let id = selectAllTodos(initialState)[0].id;
+    let tag = "new-tag";
+    let state = {
+      todos: todos.reducer(initialState.todos, tagAddedToTodo(id, tag)),
+    };
+    let todo = selectTodoById(state, id);
+    expect(todo?.tags).toContain(tag);
+  });
+
+  test("should add an existing tag to a todo", () => {
+    let id = selectAllTodos(initialState)[0].id;
+    let tag = "work";
+    let state = {
+      todos: todos.reducer(initialState.todos, tagAddedToTodo(id, tag)),
+    };
+    let todo = selectTodoById(state, id);
+    expect(todo?.tags).toContain(tag);
+  });
+
+  test("should remove a tag from a todo", () => {
+    let id = selectAllTodos(initialState)[0].id;
+    let tag = "personal";
+    let state = {
+      todos: todos.reducer(initialState.todos, tagRemovedFromTodo(id, tag)),
+    };
+    let todo = selectTodoById(state, id);
+    expect(todo?.tags).not.toContain(tag);
   });
 }
