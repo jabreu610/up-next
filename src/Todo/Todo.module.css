@@ -5,6 +5,7 @@
   align-items: center;
   gap: 0.75rem;
   max-width: 80ch;
+  padding: 0.5em var(--layout-padding-x);
 }
 
 .content {
@@ -31,6 +32,7 @@
 
 .container.selected {
   grid: "checkbox content" auto ". notes" auto / auto 1fr;
+  background-color: var(--highlight-background-color);
 }
 
 input.content {
@@ -38,6 +40,7 @@ input.content {
   background: none;
   color: inherit;
   width: 100%;
+  padding: 0;
 }
 
 textarea.notes {
@@ -45,8 +48,11 @@ textarea.notes {
   background: none;
   width: 100%;
   resize: none;
+  overflow: hidden;
+  height: auto;
+  padding: 0;
 }
 
 .empty {
-  opacity: 0.5;
+  color: var(--text-color-light);
 }

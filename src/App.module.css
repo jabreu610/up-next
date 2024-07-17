@@ -1,13 +1,18 @@
 .layout {
+  --layout-padding-x: 1rem;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.list {
-  list-style: none;
-  padding: 0 1rem;
-  grid: auto / 1fr;
+  padding: var(--layout-padding-x);
   display: grid;
   gap: 1rem;
+  
+
+  .list {
+    list-style: none;
+    padding: 0;
+    margin: 0 calc(-1 * var(--layout-padding-x));
+    grid: auto / 1fr;
+    display: grid;
+    gap: 0.5rem;
+  }
 }

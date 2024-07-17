@@ -51,10 +51,13 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
     handleContentUpdate({ notes: notesInputValue });
   }, [notesInputValue, handleContentUpdate]);
 
-  const handleSelection = useCallback<MouseEventHandler>((e) => {
-    console.log(e.target, document.activeElement);
-    onSelect(id);
-  }, [onSelect, id]);
+  const handleSelection = useCallback<MouseEventHandler>(
+    (e) => {
+      console.log(e.target, document.activeElement);
+      onSelect(id);
+    },
+    [onSelect, id]
+  );
 
   return (
     <li
@@ -82,6 +85,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
         <>
           {selected ? (
             <textarea
+              rows={3}
               className={cx("notes")}
               value={notesInputValue}
               placeholder="Notes"
