@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  KeyboardEventHandler,
   MouseEventHandler,
   useCallback,
   useImperativeHandle,
@@ -10,6 +11,7 @@ import { useTodoById } from "../hooks/useTodoById";
 import { Id, Nullable } from "../util";
 import styles from "./Todo.module.css";
 import classNames from "classnames/bind";
+import GrowingTextArea from "./GrowingTextArea";
 
 const cx = classNames.bind(styles);
 
@@ -51,12 +53,18 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
     handleContentUpdate({ notes: notesInputValue });
   }, [notesInputValue, handleContentUpdate]);
 
-  const handleSelection = useCallback<MouseEventHandler>(
+  const handleSelection = useCallback<MouseEventHandler>(() => {
+    onSelect(id);
+  }, [onSelect, id]);
+
+  const handleReturnPress = useCallback<KeyboardEventHandler<HTMLInputElement>>(
     (e) => {
-      console.log(e.target, document.activeElement);
-      onSelect(id);
+      if (e.key === "Enter") {
+        e.currentTarget.blur();
+        onSelect(null);
+      }
     },
-    [onSelect, id]
+    [onSelect]
   );
 
   return (
@@ -75,6 +83,8 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
           value={contentInputValue}
           onChange={(e) => setContentInputValue(e.target.value)}
           onBlur={handleContentCommit}
+          onKeyUp={handleReturnPress}
+          enterKeyHint="done"
         />
       ) : (
         <span className={cx("content", { empty: !data.content })}>
@@ -83,18 +93,13 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
       )}
       {selected && (
         <>
-          {selected ? (
-            <textarea
-              rows={3}
-              className={cx("notes")}
-              value={notesInputValue}
-              placeholder="Notes"
-              onChange={(e) => setNotesInputValue(e.target.value)}
-              onBlur={handleNoteCommit}
-            />
-          ) : (
-            <p>{data.notes}</p>
-          )}
+          <GrowingTextArea
+            className={cx("notes")}
+            value={notesInputValue}
+            placeholder="Notes"
+            onChange={(e) => setNotesInputValue(e.target.value)}
+            onBlur={handleNoteCommit}
+          />
           {data.dueDate && <p>Due: {data.dueDate.toLocaleString()}</p>}
         </>
       )}
