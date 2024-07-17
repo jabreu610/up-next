@@ -2,6 +2,7 @@ import {
   createSlice,
   PayloadAction,
   createEntityAdapter,
+  createSelector,
 } from "@reduxjs/toolkit";
 import { Nullable, Id } from "./util";
 
@@ -70,6 +71,20 @@ const todos = createSlice({
       },
       prepare(input: NewTodo) {
         return { payload: createTodoAndTags(input) };
+      },
+    },
+    todoContentUpdated: {
+      reducer(
+        state,
+        action: PayloadAction<{ id: Id; update: Partial<Todo>; ts: number }>
+      ) {
+        todosAdapter.updateOne(state, {
+          id: action.payload.id,
+          changes: { ...action.payload.update, updatedTs: action.payload.ts },
+        });
+      },
+      prepare(id: Id, update: Partial<Todo>) {
+        return { payload: { id, update, ts: Date.now() } };
       },
     },
     todoCompleted: {
@@ -152,8 +167,8 @@ const todos = createSlice({
           }
         }
       },
-      prepare(id: Id, tag: string) {
-        return { payload: { ts: Date.now(), tag, id } };
+      prepare(id: Id, tag: string, ts?: number) {
+        return { payload: { ts: ts ?? Date.now(), tag, id } };
       },
     },
     tagRemovedFromTodo: {
@@ -189,16 +204,25 @@ const todos = createSlice({
         return { payload: { ts: Date.now(), tag, id } };
       },
     },
+    todoTouched: {
+      reducer(state, action: PayloadAction<{ id: Id; ts: number }>) {
+        todosAdapter.updateOne(state, {
+          id: action.payload.id,
+          changes: { updatedTs: action.payload.ts },
+        });
+      },
+      prepare(id: Id) {
+        return {payload: {id, ts: Date.now()}}
+      }
+    }
   },
   selectors: {
     selectTodoById: todosAdapter.getSelectors().selectById,
     selectAllTodos: todosAdapter.getSelectors().selectAll,
-    selectActiveTodos: (state): Todo[] => {
-      return todos
-        .getSelectors()
-        .selectAllTodos(state)
-        .filter((todo) => !todo.archivedTs && !todo.completedTs);
-    },
+    selectActiveTodos: createSelector(
+      todosAdapter.getSelectors().selectAll,
+      (todos) => todos.filter((todo) => !todo.archivedTs && !todo.completedTs)
+    ),
     selectArchivedTodos: (state): Todo[] => {
       return todos
         .getSelectors()
@@ -263,10 +287,12 @@ function createTodoAndTags(input: NewTodo): [Todo, Tag[]] {
 
 export const {
   todoAdded,
+  todoContentUpdated,
   todoCompleted,
   todoArchived,
   todoUncompleted,
   todoUnarchived,
+  todoTouched,
   tagAddedToTodo,
   tagRemovedFromTodo,
 } = todos.actions;
@@ -425,7 +451,11 @@ if (import.meta.vitest) {
   });
 
   test("should return todo by multiple tags sorted by count", () => {
-    const todos = selectTodosByTags(initialState, ["family", "personal", "tagThatDoesNotExist"]);
+    const todos = selectTodosByTags(initialState, [
+      "family",
+      "personal",
+      "tagThatDoesNotExist",
+    ]);
     const expectedContent = "Call mom";
     expect(todos).toHaveLength(6);
     expect(todos[0]?.content).toBe(expectedContent);
@@ -449,6 +479,7 @@ if (import.meta.vitest) {
     };
     const todo = selectTodoById(state, id);
     expect(todo?.tags).toContain(tag);
+    expect(todo.updatedTs).toBeGreaterThan(todo.createdTs);
   });
 
   test("should remove a tag from a todo", () => {
@@ -459,5 +490,16 @@ if (import.meta.vitest) {
     };
     const todo = selectTodoById(state, id);
     expect(todo?.tags).not.toContain(tag);
+  });
+
+  test("newly created empty todo should have equal created and updated timestamps", () => {
+    const content = "";
+    const todosState = todos.reducer(
+      initialState.todos,
+      todoAdded({ content, notes: null, dueTs: null, tags: [] })
+    );
+    const state = { todos: todosState };
+    const todo = selectAllTodos(state).find((t) => t.content === content);
+    expect(todo?.createdTs).toBe(todo?.updatedTs);
   });
 }
