@@ -45,7 +45,7 @@ const tagsAdapter = createEntityAdapter({
   sortComparer: (a, b) => a.name.localeCompare(b.name),
 });
 
-const todos = createSlice({
+export const todos = createSlice({
   name: "todos",
   initialState: todosAdapter.getInitialState({
     tags: tagsAdapter.getInitialState(),
