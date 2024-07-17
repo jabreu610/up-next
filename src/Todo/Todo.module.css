@@ -1,0 +1,52 @@
+.container {
+  list-style: none;
+  display: grid;
+  grid: "checkbox content" auto / auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 80ch;
+}
+
+.content {
+  color: inherit;
+  font-size: 1.1rem;
+}
+
+.notes {
+  color: inherit;
+  font-size: 1rem;
+}
+
+.container > input[type="checkbox"] {
+  grid-area: checkbox;
+}
+
+.container > .content {
+  grid-area: content;
+}
+
+.container > .notes {
+  grid-area: notes;
+}
+
+.container.selected {
+  grid: "checkbox content" auto ". notes" auto / auto 1fr;
+}
+
+input.content {
+  border: none;
+  background: none;
+  color: inherit;
+  width: 100%;
+}
+
+textarea.notes {
+  border: none;
+  background: none;
+  width: 100%;
+  resize: none;
+}
+
+.empty {
+  opacity: 0.5;
+}
