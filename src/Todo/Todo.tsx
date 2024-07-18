@@ -55,9 +55,6 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
 
   const handleSelection = useCallback<MouseEventHandler>(() => {
     onSelect(id);
-    // if (!document.hasFocus()) {
-    //   onSelect(id);
-    // }
   }, [onSelect, id]);
 
   const handleReturnPress = useCallback<KeyboardEventHandler<HTMLInputElement>>(

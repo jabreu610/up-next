@@ -108,7 +108,7 @@ export default function App() {
   return (
     <div className={cx("layout")}>
       <h1>Up Next</h1>
-      <ul ref={listRef} className={cx("list")}>
+      <ul ref={listRef} role="list" className={cx("list")}>
         {todos.map((todoId) => (
           <Todo
             ref={

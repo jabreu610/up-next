@@ -9,6 +9,11 @@ export default defineConfig({
   }), react() ],
   test: {
     includeSource: ["src/**/*.{js,ts}"],
+    environment: 'jsdom',
+    globals: true,
+    deps: {
+      moduleDirectories: ["node_modules", "src"],
+    }
   },
   define: {
     "import.meta.vitest": undefined,
