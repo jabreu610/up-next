@@ -4,7 +4,9 @@ import {
   selectTodoById,
   tagAddedToTodo,
   tagRemovedFromTodo,
+  todoCompleted,
   todoContentUpdated,
+  todoUncompleted,
 } from "../todos";
 import { RootState } from "../store";
 import { useCallback, useMemo } from "react";
@@ -16,11 +18,14 @@ type TodoUpdate = {
 
 export function useTodoById(id: Id) {
   const todo = useSelector((state: RootState) => selectTodoById(state, id));
-  const data = useMemo(() => ({
-    ...todo,
-    dueDate: todo.dueTs ? new Date(todo.dueTs) : null,
-    completed: todo.completedTs !== null,
-  }), [todo]);
+  const data = useMemo(
+    () => ({
+      ...todo,
+      dueDate: todo.dueTs ? new Date(todo.dueTs) : null,
+      completed: todo.completedTs !== null,
+    }),
+    [todo]
+  );
   const dispatch = useDispatch();
   const handleContentUpdate = useCallback(
     (update: TodoUpdate) => {
@@ -28,6 +33,13 @@ export function useTodoById(id: Id) {
     },
     [dispatch, id]
   );
+  const handleSetComplete = useCallback((completed: boolean) => {
+    if (completed) {
+      dispatch(todoCompleted(id));
+    } else {
+      dispatch(todoUncompleted(id));
+    }
+  }, [dispatch, id]);
   const handleTagAddition = useCallback(
     (tag: string) => {
       dispatch(tagAddedToTodo(id, tag));
@@ -40,5 +52,5 @@ export function useTodoById(id: Id) {
     },
     [dispatch, id]
   );
-  return { data, handleContentUpdate, handleTagAddition, handleTagRemoval };
+  return { data, handleContentUpdate, handleSetComplete, handleTagAddition, handleTagRemoval };
 }

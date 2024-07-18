@@ -1,4 +1,5 @@
 import {
+  ChangeEventHandler,
   forwardRef,
   KeyboardEventHandler,
   MouseEventHandler,
@@ -19,6 +20,7 @@ type TodoProps = {
   id: Id;
   selected?: boolean;
   onSelect: (id: Nullable<Id>) => void;
+  autoFucus?: boolean;
 };
 
 export type TodoRef = {
@@ -26,12 +28,12 @@ export type TodoRef = {
 };
 
 const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
-  { id, selected, onSelect },
+  { id, selected, onSelect, autoFucus },
   ref
 ) {
   const containerRef = useRef<HTMLLIElement>(null);
   const contentInputRef = useRef<HTMLInputElement>(null);
-  const { data, handleContentUpdate } = useTodoById(id);
+  const { data, handleContentUpdate, handleSetComplete } = useTodoById(id);
   const [contentInputValue, setContentInputValue] = useState(data.content);
   const [notesInputValue, setNotesInputValue] = useState(data.notes ?? "");
 
@@ -53,9 +55,19 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
     handleContentUpdate({ notes: notesInputValue });
   }, [notesInputValue, handleContentUpdate]);
 
-  const handleSelection = useCallback<MouseEventHandler>(() => {
-    onSelect(id);
-  }, [onSelect, id]);
+  const handleSelection = useCallback<MouseEventHandler>(
+    (e) => {
+      // if target is an input of type checkbox, don't select the todo
+      if (
+        e.target instanceof HTMLInputElement &&
+        e.target.type === "checkbox"
+      ) {
+        return;
+      }
+      onSelect(id);
+    },
+    [onSelect, id]
+  );
 
   const handleReturnPress = useCallback<KeyboardEventHandler<HTMLInputElement>>(
     (e) => {
@@ -67,15 +79,29 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
     [onSelect]
   );
 
+  const handleCheckboxChange = useCallback<
+    ChangeEventHandler<HTMLInputElement>
+  >(
+    (e) => {
+      handleSetComplete(e.target.checked);
+    },
+    [handleSetComplete]
+  );
+
   return (
     <li
       className={cx("container", { selected })}
       onClick={handleSelection}
       ref={containerRef}
     >
-      <input type="checkbox" defaultChecked={data.completed} />
+      <input
+        type="checkbox"
+        onChange={handleCheckboxChange}
+        defaultChecked={data.completed}
+      />
       {selected ? (
         <input
+          autoFocus={autoFucus}
           className={cx("content")}
           ref={contentInputRef}
           placeholder="New Todo"

@@ -12,9 +12,8 @@ import {
   selectActiveTodos,
   todoAdded,
   todoArchived,
-  todoTouched,
 } from "./todos";
-import Todo, { TodoRef } from "./Todo/Todo";
+import Todo from "./Todo/Todo";
 import { createSelector } from "@reduxjs/toolkit";
 import { Id, Nullable } from "./util";
 import style from "./App.module.css";
@@ -33,10 +32,10 @@ const selectNewlyAddedTodoId = createSelector(
 );
 
 export default function App() {
-  const todos = useSelector(selectActiveTodoIds);
+  const activeTodos = useSelector(selectActiveTodoIds);
+  const [renderedTodos, setRenderedTodos] = useState<Id[]>(activeTodos);
   const recentlyAddedTodoId = useSelector(selectNewlyAddedTodoId);
   const [selected, setSelected] = useState<typeof recentlyAddedTodoId>(null);
-  const selectedTodoRef = useRef<TodoRef>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const dispatch = useDispatch();
 
@@ -46,15 +45,18 @@ export default function App() {
 
   const handleSelect = useCallback((id: Nullable<Id>) => setSelected(id), []);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (recentlyAddedTodoId) {
-      setSelected(recentlyAddedTodoId);
-      dispatch(todoTouched(recentlyAddedTodoId));
-      if (selectedTodoRef.current) {
-        selectedTodoRef.current.focus();
-      }
+      setRenderedTodos(activeTodos);
+    } else {
+      const timeout = setTimeout(() => {
+        setRenderedTodos(activeTodos);
+      }, 1000);
+      return () => {
+        clearTimeout(timeout);
+      };
     }
-  }, [recentlyAddedTodoId, dispatch]);
+  }, [activeTodos, recentlyAddedTodoId]);
 
   useEffect(() => {
     if (listRef.current && selected) {
@@ -87,6 +89,12 @@ export default function App() {
     }
   }, [selected]);
 
+  useLayoutEffect(() => {
+    if (recentlyAddedTodoId) {
+      setSelected(recentlyAddedTodoId);
+    }
+  }, [recentlyAddedTodoId, dispatch, renderedTodos]);
+
   const handleArchive = useCallback(() => {
     if (selected) {
       dispatch(todoArchived(selected));
@@ -109,20 +117,24 @@ export default function App() {
     <div className={cx("layout")}>
       <h1>Up Next</h1>
       <ul ref={listRef} role="list" className={cx("list")}>
-        {todos.map((todoId) => (
+        {renderedTodos.map((todoId) => (
           <Todo
-            ref={
-              recentlyAddedTodoId === todoId ||
-              (!recentlyAddedTodoId && selected === todoId)
-                ? selectedTodoRef
-                : undefined
-            }
+            autoFucus={recentlyAddedTodoId === todoId}
             key={todoId}
             selected={selected === todoId || recentlyAddedTodoId === todoId}
             id={todoId}
             onSelect={handleSelect}
           />
         ))}
+      {recentlyAddedTodoId && (
+        <Todo
+          autoFucus
+          key={recentlyAddedTodoId}
+          selected
+          id={recentlyAddedTodoId}
+          onSelect={handleSelect}
+        />
+      )}
       </ul>
       <button onClick={handleAddTodo}>New Todo</button>
       <FloatingControls config={floatingControlsConfig} selectedId={selected} />
