@@ -18,8 +18,13 @@
   font-size: 1rem;
 }
 
-.container > input[type="checkbox"] {
+.container > label:has(input[type="checkbox"]) {
   grid-area: checkbox;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 10mm;
+  min-height: 10mm;
 }
 
 .container > .content {

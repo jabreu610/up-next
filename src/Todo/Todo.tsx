@@ -59,8 +59,11 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
     (e) => {
       // if target is an input of type checkbox, don't select the todo
       if (
-        e.target instanceof HTMLInputElement &&
-        e.target.type === "checkbox"
+        (e.target instanceof HTMLInputElement &&
+          e.target.type === "checkbox") ||
+        (e.target instanceof HTMLLabelElement &&
+          e.target.firstChild instanceof HTMLInputElement &&
+          e.target.firstChild.type === "checkbox")
       ) {
         return;
       }
@@ -94,11 +97,13 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
       onClick={handleSelection}
       ref={containerRef}
     >
-      <input
-        type="checkbox"
-        onChange={handleCheckboxChange}
-        defaultChecked={data.completed}
-      />
+      <label>
+        <input
+          type="checkbox"
+          onChange={handleCheckboxChange}
+          defaultChecked={data.completed}
+        />
+      </label>
       {selected ? (
         <input
           autoFocus={autoFucus}
