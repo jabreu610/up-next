@@ -81,7 +81,6 @@ test("should handle checkbox change", async ({ expect }) => {
   const state = await getInitialTestState(todos);
   const render = getRenderer(state as StorePartial);
   render(<App />);
-  // wait for the list to render
   const list = await screen.findAllByRole("listitem");
   const todo = list[0];
   expect(todo).toBeInTheDocument();
@@ -91,4 +90,26 @@ test("should handle checkbox change", async ({ expect }) => {
   await waitFor(() => expect(checkbox).toBeChecked());
   await user.click(checkbox);
   await waitFor(() => expect(checkbox).not.toBeChecked());
+});
+
+test("should handle updating a note", async ({ expect }) => {
+  const user = userEvent.setup();
+  const state = await getInitialTestState(todos);
+  const render = getRenderer(state as StorePartial);
+  render(<App />);
+  const list = await screen.findAllByRole("listitem");
+  const todo = list[0];
+  expect(todo).toBeInTheDocument();
+  await user.click(todo);
+  await waitFor(() => expect(todo).toHaveClass(/selected/g));
+  const noteInput = screen.getByPlaceholderText("Notes");
+  expect(noteInput).toBeInTheDocument();
+  await user.click(noteInput);
+  const noteText = "a new note";
+  await user.keyboard(noteText);
+  await waitFor(() => expect(noteInput).toHaveValue(noteText));
+  await user.click(document.body);
+  const note = screen.getByText(noteText);
+  expect(note).toBeInTheDocument();
+  expect(note).toHaveTextContent(noteText);
 });
