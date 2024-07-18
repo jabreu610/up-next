@@ -51,19 +51,28 @@ export default function App() {
   useEffect(() => {
     if (listRef.current && selected) {
       const listEl = listRef.current;
-      let lastActiveElement: Nullable<Element> = null;
+      let focusLost = false;
+      const trackActiveElement = () => {
+        focusLost = true;
+        setTimeout(() => {
+          focusLost = false;
+        }, 0);
+      };
       const handleLightDismiss = (e: MouseEvent) => {
-        if (
-          !listEl.contains(e.target as Node) &&
-          lastActiveElement?.tagName !== "INPUT" &&
-          lastActiveElement?.tagName !== "TEXTAREA"
-        ) {
+        const target = e.target as Element;
+        if (target.tagName === "BUTTON") {
+          return;
+        } else if (listEl.contains(target) && focusLost) {
+          e.stopPropagation();
+        } else if (!listEl.contains(target) && !focusLost) {
           setSelected(null);
         }
         lastActiveElement = document.activeElement;
       };
+      document.addEventListener("focusout", trackActiveElement);
       document.addEventListener("click", handleLightDismiss, { capture: true });
       return () => {
+        document.removeEventListener("focusout", trackActiveElement);
         document.removeEventListener("click", handleLightDismiss, {
           capture: true,
         });
