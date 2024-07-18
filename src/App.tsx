@@ -1,4 +1,10 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { selectActiveTodos, todoAdded, todoTouched } from "./todos";
 import Todo, { TodoRef } from "./Todo/Todo";
@@ -23,6 +29,7 @@ export default function App() {
   const recentlyAddedTodoId = useSelector(selectNewlyAddedTodoId);
   const [selected, setSelected] = useState<typeof recentlyAddedTodoId>(null);
   const selectedTodoRef = useRef<TodoRef>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const dispatch = useDispatch();
 
   const handleAddTodo = useCallback(() => {
@@ -41,10 +48,27 @@ export default function App() {
     }
   }, [recentlyAddedTodoId, dispatch]);
 
+  useEffect(() => {
+    if (listRef.current && selected) {
+      const listEl = listRef.current;
+      const handleLightDismiss = (e: MouseEvent) => {
+        if (!listEl.contains(e.target as Node)) {
+          setSelected(null);
+        }
+      };
+      document.addEventListener("click", handleLightDismiss, { capture: true });
+      return () => {
+        document.removeEventListener("click", handleLightDismiss, {
+          capture: true,
+        });
+      };
+    }
+  }, [selected]);
+
   return (
     <div className={cx("layout")}>
       <h1>Up Next</h1>
-      <ul className={cx("list")}>
+      <ul ref={listRef} className={cx("list")}>
         {todos.map((todoId) => (
           <Todo
             ref={recentlyAddedTodoId === todoId ? selectedTodoRef : undefined}
