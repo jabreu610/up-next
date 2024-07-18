@@ -51,10 +51,16 @@ export default function App() {
   useEffect(() => {
     if (listRef.current && selected) {
       const listEl = listRef.current;
+      let lastActiveElement: Nullable<Element> = null;
       const handleLightDismiss = (e: MouseEvent) => {
-        if (!listEl.contains(e.target as Node)) {
+        if (
+          !listEl.contains(e.target as Node) &&
+          lastActiveElement?.tagName !== "INPUT" &&
+          lastActiveElement?.tagName !== "TEXTAREA"
+        ) {
           setSelected(null);
         }
+        lastActiveElement = document.activeElement;
       };
       document.addEventListener("click", handleLightDismiss, { capture: true });
       return () => {
