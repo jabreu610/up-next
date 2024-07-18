@@ -59,6 +59,12 @@ export default function App() {
   }, [activeTodos, recentlyAddedTodoId]);
 
   useEffect(() => {
+    if (selected && !renderedTodos.includes(selected)) {
+      setSelected(null);
+    }
+  }, [selected, renderedTodos])
+
+  useEffect(() => {
     if (listRef.current && selected) {
       const listEl = listRef.current;
       let focusLost = false;
