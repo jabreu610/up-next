@@ -1,17 +1,25 @@
 import {
+  ComponentProps,
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { selectActiveTodos, todoAdded, todoTouched } from "./todos";
+import {
+  selectActiveTodos,
+  todoAdded,
+  todoArchived,
+  todoTouched,
+} from "./todos";
 import Todo, { TodoRef } from "./Todo/Todo";
 import { createSelector } from "@reduxjs/toolkit";
 import { Id, Nullable } from "./util";
 import style from "./App.module.css";
 import classNames from "classnames/bind";
+import FloatingControls from "./FloatingControls/FloatingControls";
 
 const cx = classNames.bind(style);
 
@@ -67,7 +75,6 @@ export default function App() {
         } else if (!listEl.contains(target) && !focusLost) {
           setSelected(null);
         }
-        lastActiveElement = document.activeElement;
       };
       document.addEventListener("focusout", trackActiveElement);
       document.addEventListener("click", handleLightDismiss, { capture: true });
@@ -79,6 +86,24 @@ export default function App() {
       };
     }
   }, [selected]);
+
+  const handleArchive = useCallback(() => {
+    if (selected) {
+      dispatch(todoArchived(selected));
+      setSelected(null);
+    }
+  }, [selected, dispatch]);
+
+  const floatingControlsConfig: ComponentProps<
+    typeof FloatingControls
+  >["config"] = useMemo(() => {
+    return [
+      {
+        label: "Delete",
+        onClick: handleArchive,
+      },
+    ];
+  }, [handleArchive]);
 
   return (
     <div className={cx("layout")}>
@@ -100,6 +125,7 @@ export default function App() {
         ))}
       </ul>
       <button onClick={handleAddTodo}>New Todo</button>
+      <FloatingControls config={floatingControlsConfig} selectedId={selected} />
     </div>
   );
 }

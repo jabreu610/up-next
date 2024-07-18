@@ -1,6 +1,8 @@
 :root{
-  --background-color: hsl(240, 20%, 95%);
-  --highlight-background-color: hsl(240, 20%, 90%);
+  --base-hue: 240;
+  --background-color: hsl(var(--base-hue), 20%, 95%);
+  --highlight-background-color: hsl(var(--base-hue), 20%, 90%);
+  --control-background-color: hsl(var(--base-hue), 25%, 95%);
   --text-color: hsl(0, 0%, 20%);
   --text-color-light: hsl(0, 0%, 50%);
   color: var(--text-color);
@@ -13,9 +15,10 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    --background-color: hsl(0, 0%, 20%);
-    --highlight-background-color: hsl(0, 0%, 25%);
-    --text-color: hsl(240, 20%, 95%);
-    --text-color-light: hsl(240, 20%, 60%);
+    --background-color: hsl(var(--base-hue), 0%, 20%);
+    --highlight-background-color: hsl(var(--base-hue), 0%, 25%);
+    --control-background-color: hsl(var(--base-hue), 15%, 20%);
+    --text-color: hsl(var(--base-hue), 20%, 95%);
+    --text-color-light: hsl(var(--base-hue), 20%, 60%);
   }
 }
