@@ -212,9 +212,9 @@ export const todos = createSlice({
         });
       },
       prepare(id: Id) {
-        return {payload: {id, ts: Date.now()}}
-      }
-    }
+        return { payload: { id, ts: Date.now() } };
+      },
+    },
   },
   selectors: {
     selectTodoById: todosAdapter.getSelectors().selectById,
@@ -501,5 +501,27 @@ if (import.meta.vitest) {
     const state = { todos: todosState };
     const todo = selectAllTodos(state).find((t) => t.content === content);
     expect(todo?.createdTs).toBe(todo?.updatedTs);
+  });
+
+  test("touching a todo should update the updated timestamp", () => {
+    const id = selectAllTodos(initialState)[0].id;
+    const state = {
+      todos: todos.reducer(initialState.todos, todoTouched(id)),
+    };
+    const todo = selectTodoById(state, id);
+    expect(todo?.updatedTs).toBeGreaterThan(todo?.createdTs);
+  });
+
+  test("should update todo content", () => {
+    const id = selectAllTodos(initialState)[0].id;
+    const content = "Updated content";
+    const state = {
+      todos: todos.reducer(
+        initialState.todos,
+        todoContentUpdated(id, { content })
+      ),
+    };
+    const todo = selectTodoById(state, id);
+    expect(todo?.content).toBe(content);
   });
 }
