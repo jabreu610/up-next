@@ -77,7 +77,12 @@ export default function App() {
       <ul ref={listRef} className={cx("list")}>
         {todos.map((todoId) => (
           <Todo
-            ref={recentlyAddedTodoId === todoId ? selectedTodoRef : undefined}
+            ref={
+              recentlyAddedTodoId === todoId ||
+              (!recentlyAddedTodoId && selected === todoId)
+                ? selectedTodoRef
+                : undefined
+            }
             key={todoId}
             selected={selected === todoId || recentlyAddedTodoId === todoId}
             id={todoId}
