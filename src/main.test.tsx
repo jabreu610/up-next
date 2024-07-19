@@ -22,8 +22,8 @@ test("can create a new todo", async ({ expect }) => {
   const user = userEvent.setup();
   render(<App />);
   // Wait for the "New Todo" button to appear, then click it
-  await screen.findByText("New Todo");
-  await user.click(screen.getByText("New Todo"));
+  const newTodoButton = await screen.findByText("Add");
+  await user.click(newTodoButton);
   // Wait for the input to appear, then type a todo and press Enter
   const input = screen.getByPlaceholderText("New Todo");
   expect(input).toHaveFocus();

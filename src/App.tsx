@@ -19,6 +19,7 @@ import { Id, Nullable } from "./util";
 import style from "./App.module.css";
 import classNames from "classnames/bind";
 import FloatingControls from "./FloatingControls/FloatingControls";
+import { FloatingActionButton } from "./FloatingActionButton/FloatingActionButton";
 
 const cx = classNames.bind(style);
 
@@ -143,7 +144,7 @@ export default function App() {
         />
       )}
       </ul>
-      <button tabIndex={selected ? -1 : 0} onClick={handleAddTodo}>New Todo</button>
+      <FloatingActionButton tabIndex={selected ? -1 : 0} onClick={handleAddTodo} />
       <FloatingControls config={floatingControlsConfig} selectedId={selected} />
     </div>
   );
