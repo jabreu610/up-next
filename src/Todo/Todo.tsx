@@ -21,6 +21,7 @@ type TodoProps = {
   selected?: boolean;
   onSelect: (id: Nullable<Id>) => void;
   autoFucus?: boolean;
+  tabIndex?: number;
 };
 
 export type TodoRef = {
@@ -28,7 +29,7 @@ export type TodoRef = {
 };
 
 const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
-  { id, selected, onSelect, autoFucus },
+  { id, selected, onSelect, autoFucus, tabIndex },
   ref
 ) {
   const containerRef = useRef<HTMLLIElement>(null);
@@ -99,6 +100,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
     >
       <label>
         <input
+          tabIndex={tabIndex ?? (selected ? 0 : -1)}
           type="checkbox"
           onChange={handleCheckboxChange}
           defaultChecked={data.completed}

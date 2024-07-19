@@ -125,6 +125,7 @@ export default function App() {
       <ul ref={listRef} role="list" className={cx("list")}>
         {renderedTodos.map((todoId) => (
           <Todo
+            tabIndex={!selected ? 0 : undefined}
             autoFucus={recentlyAddedTodoId === todoId}
             key={todoId}
             selected={selected === todoId || recentlyAddedTodoId === todoId}
@@ -142,7 +143,7 @@ export default function App() {
         />
       )}
       </ul>
-      <button onClick={handleAddTodo}>New Todo</button>
+      <button tabIndex={selected ? -1 : 0} onClick={handleAddTodo}>New Todo</button>
       <FloatingControls config={floatingControlsConfig} selectedId={selected} />
     </div>
   );
