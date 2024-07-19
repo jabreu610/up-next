@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import {createStore} from "./store";
+import {createStore} from "./state/store";
 import { Provider } from "react-redux";
 import { StrictMode } from "react";
 import App from "./App";

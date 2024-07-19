@@ -16,7 +16,7 @@ import {
   todoTouched,
   todoContentUpdated,
 } from "./todos";
-import { getInitialTestState } from "./getInitialTestState";
+import { getInitialTestState } from "../test/getInitialTestState";
 
 let initialState: { todos: ReturnType<typeof todos.reducer> };
 

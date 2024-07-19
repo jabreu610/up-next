@@ -5,7 +5,7 @@
   align-items: center;
   gap: 0.75rem;
   max-width: 80ch;
-  padding: 0.5em var(--layout-padding-x);
+  padding: 0.5em var(--layout-padding-x) 0.5em var(--layout-padding-x);
 }
 
 .content {
@@ -39,6 +39,7 @@
   grid: "checkbox content" auto ". notes" auto / auto 1fr;
   background-color: var(--background-color);
   z-index: var(--z-todo);
+  padding: 0.5em var(--layout-padding-x) 1em var(--layout-padding-x);
 }
 
 input.content {

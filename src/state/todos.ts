@@ -4,7 +4,7 @@ import {
   createEntityAdapter,
   createSelector,
 } from "@reduxjs/toolkit";
-import { Nullable, Id } from "./util";
+import { Nullable, Id } from "../util";
 
 type NewTodo = {
   content: string;

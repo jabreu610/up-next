@@ -1,4 +1,4 @@
-import { todos, todoAdded, todoTouched } from "./todos";
+import { todos, todoAdded, todoTouched } from "../state/todos";
 
 export async function getInitialTestState({ reducer }: typeof todos) {
   const mockTodos = [

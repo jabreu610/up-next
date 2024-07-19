@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import { createStore, StorePartial } from "./store";
+import { createStore, StorePartial } from "../state/store";
 import { render } from "@testing-library/react";
 import { ReactNode } from "react";
 

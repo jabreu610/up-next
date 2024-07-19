@@ -1,11 +1,11 @@
-import { cleanup, getRenderer, render, screen, waitFor } from "./test-util";
+import { cleanup, getRenderer, render, screen, waitFor } from "./test/test-util";
 import userEvent from "@testing-library/user-event";
 import { test } from "vitest";
 import App from "./App";
 import "@testing-library/jest-dom";
-import { todos } from "./todos";
-import { StorePartial } from "./store";
-import { getInitialTestState } from "./getInitialTestState";
+import { todos } from "./state/todos";
+import { StorePartial } from "./state/store";
+import { getInitialTestState } from "./test/getInitialTestState";
 
 afterEach(() => {
   cleanup();

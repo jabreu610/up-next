@@ -20,6 +20,7 @@ export default function GrowingTextArea({  className, value, placeholder, onChan
   return (
     <textarea
       ref={ref}
+      rows={1}
       className={className}
       value={value}
       placeholder={placeholder}

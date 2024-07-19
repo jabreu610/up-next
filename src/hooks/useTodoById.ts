@@ -7,8 +7,8 @@ import {
   todoCompleted,
   todoContentUpdated,
   todoUncompleted,
-} from "../todos";
-import { RootState } from "../store";
+} from "../state/todos";
+import { RootState } from "../state/store";
 import { useCallback, useMemo } from "react";
 
 type TodoUpdate = {
