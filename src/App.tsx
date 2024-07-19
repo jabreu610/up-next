@@ -108,6 +108,7 @@ export default function App() {
   useEffect(() => {
     if (recentlyAddedTodoId) {
       setSelected(recentlyAddedTodoId);
+      setListInFocus(true);
     }
   }, [recentlyAddedTodoId]);
 
