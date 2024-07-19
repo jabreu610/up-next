@@ -7,4 +7,6 @@
   right: 20px;
   border: none;
   z-index: var(--z-floating-controls);
+  background-color: var(--control-background-color);
+  color: var(--control-color);
 }

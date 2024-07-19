@@ -11,9 +11,12 @@
 
 .layout {
   --layout-padding-x: 1rem;
+  --layout-padding-y: 1rem;
+  --layout-bottom-padding: 5rem;
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--layout-padding-x);
+  padding: var(--layout-padding-y) var(--layout-padding-x)
+    var(--layout-bottom-padding) var(--layout-padding-x);
   display: grid;
   gap: 1rem;
 

@@ -12,4 +12,5 @@
   translate: calc(-50% - var(--margin)) 0; 
   bottom: 0;
   z-index: var(--z-floating-controls);
+  color: var(--control-color)
 }
