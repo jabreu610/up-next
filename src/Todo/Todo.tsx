@@ -5,6 +5,7 @@ import {
   MouseEventHandler,
   useCallback,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -24,11 +25,7 @@ type TodoProps = {
   tabIndex?: number;
 };
 
-export type TodoRef = {
-  focus(): void;
-};
-
-const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
+const Todo = forwardRef<HTMLLIElement, TodoProps>(function Todo(
   { id, selected, onSelect, autoFucus, tabIndex },
   ref
 ) {
@@ -39,13 +36,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
   const [notesInputValue, setNotesInputValue] = useState(data.notes ?? "");
 
   useImperativeHandle(ref, () => {
-    return {
-      focus() {
-        if (contentInputRef.current) {
-          contentInputRef.current.focus();
-        }
-      },
-    };
+    return containerRef.current!;
   });
 
   const handleContentCommit = useCallback(() => {
@@ -91,6 +82,31 @@ const Todo = forwardRef<TodoRef, TodoProps>(function Todo(
     },
     [handleSetComplete]
   );
+
+  useLayoutEffect(() => {
+    if (selected && containerRef.current) {
+      const entry = containerRef.current;
+      let placeholder: HTMLLIElement;
+      const token = setTimeout(() => {
+        const { top, left, height } = entry.getBoundingClientRect();
+        placeholder = new HTMLLIElement();
+        placeholder.style.height = `${height}px`;
+        entry.insertAdjacentElement("beforebegin", placeholder);
+        entry.style.position = "absolute";
+        entry.style.top = `${top}px`;
+        entry.style.left = `${left}px`;
+        entry.style.right = "0";
+      }, 0);
+      return () => {
+        clearTimeout(token);
+        placeholder?.remove();
+        entry.style.position = "static";
+        entry.style.top = "";
+        entry.style.left = "";
+        entry.style.right = "";
+      };
+    }
+  }, [selected]);
 
   return (
     <li

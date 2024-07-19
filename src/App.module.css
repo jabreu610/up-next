@@ -1,3 +1,14 @@
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.25);
+  z-index: var(--z-backdrop);
+}
+
 .layout {
   --layout-padding-x: 1rem;
   max-width: 1200px;
@@ -5,7 +16,6 @@
   padding: var(--layout-padding-x);
   display: grid;
   gap: 1rem;
-  
 
   .list {
     list-style: none;

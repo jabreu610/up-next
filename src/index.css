@@ -6,6 +6,12 @@
   --text-color: hsl(0, 0%, 20%);
   --text-color-light: hsl(0, 0%, 50%);
 
+  /* z-index layers */
+  --z-backdrop: 0;
+  --z-todo: 1;
+  --z-floating-controls: 2;
+  
+
   color: var(--text-color);
   background-color: var(--background-color);
   font-family:

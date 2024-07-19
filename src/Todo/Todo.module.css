@@ -38,6 +38,7 @@
 .container.selected {
   grid: "checkbox content" auto ". notes" auto / auto 1fr;
   background-color: var(--highlight-background-color);
+  z-index: var(--z-todo);
 }
 
 input.content {

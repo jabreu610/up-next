@@ -2,7 +2,6 @@ import {
   ComponentProps,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -39,6 +38,7 @@ export default function App() {
   const [selected, setSelected] = useState<typeof recentlyAddedTodoId>(null);
   const [listInFocus, setListInFocus] = useState(false);
   const listRef = useRef<HTMLUListElement>(null);
+  const selectedTodoRef = useRef<HTMLLIElement>(null);
   const dispatch = useDispatch();
 
   const handleAddTodo = useCallback(() => {
@@ -105,11 +105,11 @@ export default function App() {
     }
   }, [selected]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (recentlyAddedTodoId) {
       setSelected(recentlyAddedTodoId);
     }
-  }, [recentlyAddedTodoId, dispatch, renderedTodos]);
+  }, [recentlyAddedTodoId]);
 
   const handleArchive = useCallback(() => {
     if (selected) {
@@ -130,11 +130,16 @@ export default function App() {
   }, [handleArchive]);
 
   return (
+    <>
+    {selected && (
+      <div className={cx("backdrop")} />
+    )}
     <div className={cx("layout")}>
       <h1>Up Next</h1>
       <ul ref={listRef} role="list" className={cx("list")}>
         {renderedTodos.map((todoId) => (
           <Todo
+            ref={selected === todoId ? selectedTodoRef : undefined}
             tabIndex={!selected ? 0 : undefined}
             autoFucus={recentlyAddedTodoId === todoId}
             key={todoId}
@@ -145,6 +150,7 @@ export default function App() {
         ))}
       {recentlyAddedTodoId && (
         <Todo
+          ref={selectedTodoRef}
           autoFucus
           key={recentlyAddedTodoId}
           selected
@@ -156,5 +162,6 @@ export default function App() {
       <FloatingActionButton hidden={listInFocus || !!selected} tabIndex={selected ? -1 : 0} onClick={handleAddTodo} />
       <FloatingControls hidden={listInFocus} config={floatingControlsConfig} selectedId={selected} />
     </div>
+    </>
   );
 }
