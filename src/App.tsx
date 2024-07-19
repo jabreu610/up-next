@@ -37,6 +37,7 @@ export default function App() {
   const [renderedTodos, setRenderedTodos] = useState<Id[]>(activeTodos);
   const recentlyAddedTodoId = useSelector(selectNewlyAddedTodoId);
   const [selected, setSelected] = useState<typeof recentlyAddedTodoId>(null);
+  const [listInFocus, setListInFocus] = useState(false);
   const listRef = useRef<HTMLUListElement>(null);
   const dispatch = useDispatch();
 
@@ -69,12 +70,18 @@ export default function App() {
     if (listRef.current && selected) {
       const listEl = listRef.current;
       let focusLost = false;
-      const trackActiveElement = () => {
+      const handleFocusOut = () => {
         focusLost = true;
+        setListInFocus(false);
         setTimeout(() => {
           focusLost = false;
         }, 0);
       };
+      const handleFocusIn = () => {
+        if (selected) {
+          setListInFocus(true);
+        }
+      }
       const handleLightDismiss = (e: MouseEvent) => {
         const target = e.target as Element;
         if (target.tagName === "BUTTON") {
@@ -85,10 +92,12 @@ export default function App() {
           setSelected(null);
         }
       };
-      document.addEventListener("focusout", trackActiveElement);
+      listEl.addEventListener("focusout", handleFocusOut);
+      listEl.addEventListener("focusin", handleFocusIn);
       document.addEventListener("click", handleLightDismiss, { capture: true });
       return () => {
-        document.removeEventListener("focusout", trackActiveElement);
+        listEl.removeEventListener("focusout", handleFocusOut);
+        listEl.removeEventListener("focusin", handleFocusIn);
         document.removeEventListener("click", handleLightDismiss, {
           capture: true,
         });
@@ -144,8 +153,8 @@ export default function App() {
         />
       )}
       </ul>
-      <FloatingActionButton tabIndex={selected ? -1 : 0} onClick={handleAddTodo} />
-      <FloatingControls config={floatingControlsConfig} selectedId={selected} />
+      <FloatingActionButton hidden={listInFocus || !!selected} tabIndex={selected ? -1 : 0} onClick={handleAddTodo} />
+      <FloatingControls hidden={listInFocus} config={floatingControlsConfig} selectedId={selected} />
     </div>
   );
 }

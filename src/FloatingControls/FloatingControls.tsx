@@ -31,8 +31,11 @@ export default function FloatingControls({
   hidden = false,
   selectedId,
 }: FloatingControlsProps) {
+  if (hidden || !selectedId ) {
+    return null;
+  }
   return (
-    <div className={cx("container", { hidden: hidden || !selectedId })}>
+    <div className={cx("container")}>
       {config.map((item, index) => (
         <FloatingControlsButton key={index} {...item} />
       ))}

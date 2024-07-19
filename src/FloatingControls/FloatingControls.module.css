@@ -11,8 +11,4 @@
   left: 50%;
   translate: calc(-50% - var(--margin)) 0; 
   bottom: 0;
-
-  &.hidden {
-    display: none;
-  }
 }
